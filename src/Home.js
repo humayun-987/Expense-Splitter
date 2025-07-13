@@ -8,7 +8,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-sky-100 to-indigo-200 flex flex-col items-center justify-center px-6 py-10 font-sans">
       <Navbar/>
-      <h1 className="text-4xl md:text-5xl font-bold text-indigo-700 mb-6 text-center">Admin Dashboard</h1>
+      <h1 className="text-4xl md:text-5xl font-bold text-indigo-700 mb-6 text-center pt-16 md:pt-0">Admin Dashboard</h1>
       
       <p className="text-gray-700 text-center max-w-2xl mb-8">
         Welcome to the admin panel. Use the options below to view and manage the registered data for Individuals and Contingents.

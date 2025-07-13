@@ -84,7 +84,7 @@ const IndividualData = () => {
   const isBooleanField = filterKey === 'paymentSuccessful';
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans pt-20">
+    <div className="min-h-screen bg-gradient-to-r from-sky-100 to-indigo-200 p-6 font-sans pt-20">
       <ToastContainer />
       <Navbar />
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">Admin Panel - Individuals Data 2025</h1>
