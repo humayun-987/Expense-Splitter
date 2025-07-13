@@ -8,22 +8,10 @@ import Navbar from './components/Navbar';
 
 const ContingentData = () => {
   const fixedHeaders = [
-    'id',
-    'schoolName',
-    'username',
-    'numberOfStudents',
-    'principalName',
-    'pocName',
-    'whatsapp',
-    'schoolEmail',
-    'pocEmail',
-    'principalPhone',
-    'pocPhone',
-    'schoolAddress',
-    'state',
-    'city',
-    'applicationPassword',
-    'paymentSuccessful',
+    'id', 'schoolName', 'username', 'numberOfStudents', 'principalName',
+    'pocName', 'whatsapp', 'schoolEmail', 'pocEmail', 'principalPhone',
+    'pocPhone', 'schoolAddress', 'state', 'city', 'applicationPassword',
+    'paymentSuccessful'
   ];
 
   const [contingents, setContingents] = useState([]);
@@ -38,9 +26,31 @@ const ContingentData = () => {
 
   const fetchContingents = async () => {
     const snapshot = await getDocs(collection(firestore, "Contingent Users'25"));
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setContingents(data);
-    setFilteredData(data);
+    const data = snapshot.docs.map(doc => {
+      const raw = doc.data();
+      let timestamp = null;
+
+      if (raw.timestamp) {
+        if (typeof raw.timestamp === 'object' && raw.timestamp.toDate) {
+          timestamp = raw.timestamp.toDate();
+        } else {
+          timestamp = new Date(raw.timestamp);
+        }
+      }
+
+      return { id: doc.id, ...raw, timestamp };
+    });
+
+    // Sort by timestamp: latest first, undefined at bottom
+    const sorted = data.sort((a, b) => {
+      if (!a.timestamp && !b.timestamp) return 0;
+      if (!a.timestamp) return 1;
+      if (!b.timestamp) return -1;
+      return b.timestamp - a.timestamp;
+    });
+
+    setContingents(sorted);
+    setFilteredData(sorted);
   };
 
   const exportToCSV = () => {
@@ -70,11 +80,9 @@ const ContingentData = () => {
     const docRef = doc(firestore, "Contingent Users'25", id);
     await updateDoc(docRef, { paymentSuccessful: !current });
 
-    if (!current) {
-      toast.success('Payment updated to true', { autoClose: 2000 });
-    } else {
-      toast.warning('Payment updated to false', { autoClose: 2000 });
-    }
+    toast[!current ? 'success' : 'warning'](
+      `Payment updated to ${!current}`, { autoClose: 2000 }
+    );
 
     fetchContingents();
   };
@@ -87,6 +95,7 @@ const ContingentData = () => {
       <Navbar />
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">Admin Panel - Contingent Data 2025</h1>
 
+      {/* Filters */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         <input
           placeholder="Search by ID"
@@ -137,6 +146,7 @@ const ContingentData = () => {
         </button>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full text-sm text-left text-gray-700 border">
           <thead className="bg-blue-600 text-white">
@@ -156,8 +166,9 @@ const ContingentData = () => {
                 <td className="px-4 py-2 border text-center">
                   <button
                     onClick={() => togglePayment(c.id, c.paymentSuccessful)}
-                    className={`px-3 py-1 rounded text-white ${c.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
-                      }`}
+                    className={`px-3 py-1 rounded text-white ${
+                      c.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                    }`}
                   >
                     Set {c.paymentSuccessful ? 'False' : 'True'}
                   </button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { firestore } from './firebase'; // Your firebase config
+import { firestore } from './firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { toast, ToastContainer } from 'react-toastify';
 import Papa from 'papaparse';
@@ -8,24 +8,9 @@ import Navbar from './components/Navbar';
 
 const IndividualData = () => {
   const fixedHeaders = [
-    'id',
-    'username',
-    'name',
-    'email',
-    'age',
-    'class',
-    'pool',
-    'gender',
-    'school',
-    'parentsName',
-    'phone',
-    'whatsapp',
-    'state',
-    'city',
-    'dob',
-    'address',
-    'applicationPassword',
-    'paymentSuccessful',
+    'id', 'username', 'name', 'email', 'age', 'class', 'pool', 'gender',
+    'school', 'parentsName', 'phone', 'whatsapp', 'state', 'city', 'dob',
+    'address', 'applicationPassword', 'paymentSuccessful'
   ];
 
   const [students, setStudents] = useState([]);
@@ -40,9 +25,32 @@ const IndividualData = () => {
 
   const fetchStudents = async () => {
     const snapshot = await getDocs(collection(firestore, "Individual Users'25"));
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setStudents(data);
-    setFilteredData(data);
+    const data = snapshot.docs.map(doc => {
+      const raw = doc.data();
+      let timestamp = null;
+
+      // Convert if timestamp exists and is Firestore Timestamp or JS Date string
+      if (raw.timestamp) {
+        if (typeof raw.timestamp === 'object' && raw.timestamp.toDate) {
+          timestamp = raw.timestamp.toDate();
+        } else {
+          timestamp = new Date(raw.timestamp);
+        }
+      }
+
+      return { id: doc.id, ...raw, timestamp };
+    });
+
+    // Sort: Latest timestamp on top, undefined timestamps go to bottom
+    const sorted = data.sort((a, b) => {
+      if (!a.timestamp && !b.timestamp) return 0;
+      if (!a.timestamp) return 1;
+      if (!b.timestamp) return -1;
+      return b.timestamp - a.timestamp;
+    });
+
+    setStudents(sorted);
+    setFilteredData(sorted);
   };
 
   const exportToCSV = () => {
@@ -71,13 +79,7 @@ const IndividualData = () => {
   const togglePayment = async (studentId, currentValue) => {
     const docRef = doc(firestore, "Individual Users'25", studentId);
     await updateDoc(docRef, { paymentSuccessful: !currentValue });
-
-    if (!currentValue) {
-      toast.success(`Payment updated to true`, { autoClose: 2000 });
-    } else {
-      toast.warning(`Payment updated to false`, { autoClose: 2000 });
-    }
-
+    toast.success(`Payment updated to ${!currentValue}`, { autoClose: 2000 });
     fetchStudents();
   };
 
@@ -89,6 +91,7 @@ const IndividualData = () => {
       <Navbar />
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">Admin Panel - Individuals Data 2025</h1>
 
+      {/* Filter/Search Controls */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         <input
           placeholder="Search by ID"
@@ -139,6 +142,7 @@ const IndividualData = () => {
         </button>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full text-sm text-left text-gray-700 border">
           <thead className="bg-blue-600 text-white">
@@ -158,8 +162,9 @@ const IndividualData = () => {
                 <td className="px-4 py-2 border text-center">
                   <button
                     onClick={() => togglePayment(student.id, student.paymentSuccessful)}
-                    className={`px-3 py-1 rounded text-white ${student.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
-                      }`}
+                    className={`px-3 py-1 rounded text-white ${
+                      student.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                    }`}
                   >
                     Set {student.paymentSuccessful ? 'False' : 'True'}
                   </button>
