@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { firestore } from './firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { toast, ToastContainer } from 'react-toastify';
 import Papa from 'papaparse';
 import 'react-toastify/dist/ReactToastify.css';
@@ -83,13 +83,37 @@ const IndividualData = () => {
     fetchStudents();
   };
 
+  const handleDelete = async (studentId) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    try {
+      await deleteDoc(doc(firestore, "Individual Users'25", studentId));
+      toast.success("Student deleted successfully", { autoClose: 2000 });
+      setStudents(students.filter(s => s.id !== studentId));
+      setFilteredData(filteredData.filter(s => s.id !== studentId));
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Failed to delete student", { autoClose: 2000 });
+    }
+  };
+
   const isBooleanField = filterKey === 'paymentSuccessful';
+
+  // ✅ Registered & total counts
+  const registeredCount = students.filter(
+    student => student.username && student.username.trim() !== ""
+  ).length;
+  const totalCount = students.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-sky-100 to-indigo-200 p-6 font-sans pt-20">
       <ToastContainer />
       <Navbar />
-      <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">Admin Panel - Individuals Data 2025</h1>
+      <h1 className="text-3xl font-bold text-center mb-2 text-blue-700">
+        Admin Panel - Individuals Data 2025
+      </h1>
+      <p className="text-center text-lg text-gray-700 mb-6">
+        Registered Students: <span className="font-semibold">{registeredCount}</span> / {totalCount}
+      </p>
 
       {/* Filter/Search Controls */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -159,14 +183,19 @@ const IndividualData = () => {
                 {fixedHeaders.map((key, i) => (
                   <td key={i} className="px-4 py-2 border">{String(student[key] ?? '')}</td>
                 ))}
-                <td className="px-4 py-2 border text-center">
+                <td className="px-4 py-2 border text-center flex gap-2 justify-center">
                   <button
                     onClick={() => togglePayment(student.id, student.paymentSuccessful)}
-                    className={`px-3 py-1 rounded text-white ${
-                      student.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
-                    }`}
+                    className={`px-3 py-1 rounded text-white ${student.paymentSuccessful ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                      }`}
                   >
                     Set {student.paymentSuccessful ? 'False' : 'True'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(student.id)}
+                    className="px-3 py-1 rounded text-white bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>

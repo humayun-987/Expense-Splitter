@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { firestore } from './firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { toast, ToastContainer } from 'react-toastify';
 import Papa from 'papaparse';
 import 'react-toastify/dist/ReactToastify.css';
@@ -87,13 +87,38 @@ const ContingentData = () => {
     fetchContingents();
   };
 
+  // ✅ Delete a contingent
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this contingent?")) {
+      try {
+        await deleteDoc(doc(firestore, "Contingent Users'25", id));
+        toast.error("Contingent deleted!", { autoClose: 2000 });
+        fetchContingents();
+      } catch (error) {
+        console.error("Error deleting document:", error);
+        toast.error("Failed to delete contingent.");
+      }
+    }
+  };
+
   const isBooleanField = filterKey === 'paymentSuccessful';
+
+  // ✅ Registered & total contingent counts
+  const registeredCount = contingents.filter(
+    c => c.username && c.username.trim() !== ""
+  ).length;
+  const totalCount = contingents.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-sky-100 to-indigo-200 p-6 font-sans pt-20">
       <ToastContainer />
       <Navbar />
-      <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">Admin Panel - Contingent Data 2025</h1>
+      <h1 className="text-3xl font-bold text-center mb-2 text-blue-700">
+        Admin Panel - Contingent Data 2025
+      </h1>
+      <p className="text-center text-lg text-gray-700 mb-6">
+        Registered Contingents: <span className="font-semibold">{registeredCount}</span> / {totalCount}
+      </p>
 
       {/* Filters */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -163,7 +188,7 @@ const ContingentData = () => {
                 {fixedHeaders.map((key, i) => (
                   <td key={i} className="px-4 py-2 border">{String(c[key] ?? '')}</td>
                 ))}
-                <td className="px-4 py-2 border text-center">
+                <td className="px-4 py-2 border text-center flex gap-2 justify-center">
                   <button
                     onClick={() => togglePayment(c.id, c.paymentSuccessful)}
                     className={`px-3 py-1 rounded text-white ${
@@ -171,6 +196,12 @@ const ContingentData = () => {
                     }`}
                   >
                     Set {c.paymentSuccessful ? 'False' : 'True'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="px-3 py-1 rounded text-white bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
