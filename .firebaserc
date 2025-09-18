@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "unosq-admin"
+    "default": "expense-splitter-d0293",
+    "dev": "expense-splitter-d0293"
   },
   "targets": {},
   "etags": {},
