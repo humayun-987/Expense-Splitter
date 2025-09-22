@@ -498,14 +498,14 @@ export default function ExpenseSplitterWithRooms() {
   // --- UI JSX
   return (
 
-    <div className="min-h-screen bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-600
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-white
  p-6">
       <ToastContainer position="top-right" autoClose={3000} />
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-3xl font-bold text-center text-gray-100 mb-10"
+        className="text-3xl font-bold text-center text-blue-600 mb-10"
       >
         💸 Expense Splitter — Manage Trips & Expenses
       </motion.h1>
